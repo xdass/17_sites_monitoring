@@ -1,5 +1,7 @@
 import requests
-# whois server url - https://www.nic.ru/whois/?query=
+import whois
+import datetime
+import sys
 
 
 def load_urls4check(filepath):
@@ -12,17 +14,41 @@ def load_urls4check(filepath):
 
 
 def is_server_respond_with_200(url):
-    response = requests.get('http://e1.ru')
-    if response.status_code == 200:
-        return True
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+    except requests.ConnectionError as err:
+        print(err.args[0])
+
+
+def get_domain_expiration_date(site_url):
+    whois_info = whois.whois(site_url)
+    if type(whois_info.expiration_date) == list:
+        return whois_info.expiration_date[0]
     else:
-        return False
+        return whois_info.expiration_date
 
 
-def get_domain_expiration_date(domain_name):
-    pass
+def check_expiration_date(site_expiration_date):
+    today = datetime.datetime.now()
+    days_in_month = datetime.timedelta(days=30)
+    return (site_expiration_date - today) > days_in_month
 
 
 if __name__ == '__main__':
-    print(load_urls4check('sites_url.txt'))
-    print(is_server_respond_with_200('http://e1.ru'))
+    if len(sys.argv) > 1:
+        url_file_path = sys.argv[1]
+        sites_url_list = load_urls4check(url_file_path)
+        for site_url in iter(sites_url_list):
+            if is_server_respond_with_200(site_url):
+                print('От {} получен HTTP статус с кодом 200'.format(site_url))
+                expiration_date = get_domain_expiration_date(site_url)
+                if check_expiration_date(expiration_date):
+                    print('Домменное имя {}, проплачено минимум на 1 месяц'.format(site_url))
+                else:
+                    print('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
+    else:
+        print('Укажите имя файла: $python check_sites_health.py <filename>')
