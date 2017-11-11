@@ -16,7 +16,7 @@ def load_urls4check(filepath):
 def is_server_respond_with_200(url):
     try:
         response = requests.get(url)
-        if response.status_code == 200:
+        if response.ok:
             return True
         else:
             return False
@@ -35,7 +35,7 @@ def get_domain_expiration_date(site_url):
 def check_expiration_date(site_expiration_date):
     today = datetime.datetime.now()
     days_in_month = datetime.timedelta(days=30)
-    return (site_expiration_date - today) > days_in_month
+    return site_expiration_date - today > days_in_month
 
 
 if __name__ == '__main__':
