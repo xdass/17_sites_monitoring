@@ -1,4 +1,4 @@
-
+import requests
 # whois server url - https://www.nic.ru/whois/?query=
 
 
@@ -12,7 +12,11 @@ def load_urls4check(filepath):
 
 
 def is_server_respond_with_200(url):
-    pass
+    response = requests.get('http://e1.ru')
+    if response.status_code == 200:
+        return True
+    else:
+        return False
 
 
 def get_domain_expiration_date(domain_name):
@@ -21,3 +25,4 @@ def get_domain_expiration_date(domain_name):
 
 if __name__ == '__main__':
     print(load_urls4check('sites_url.txt'))
+    print(is_server_respond_with_200('http://e1.ru'))
