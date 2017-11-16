@@ -2,6 +2,7 @@ import requests
 import whois
 import datetime
 import sys
+import logging
 
 
 def load_urls4check(filepath):
@@ -16,17 +17,14 @@ def load_urls4check(filepath):
 def is_server_respond_with_200(url):
     try:
         response = requests.get(url)
-        if response.ok:
-            return True
-        else:
-            return False
+        return bool(response.ok)
     except requests.ConnectionError as err:
         print(err.args[0])
 
 
-def get_domain_expiration_date(site_url):
-    whois_info = whois.whois(site_url)
-    if type(whois_info.expiration_date) == list:
+def get_domain_expiration_date(url):
+    whois_info = whois.whois(url)
+    if isinstance(whois_info.expiration_date, list):
         return whois_info.expiration_date[0]
     else:
         return whois_info.expiration_date
@@ -39,16 +37,17 @@ def check_expiration_date(site_expiration_date):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     if len(sys.argv) > 1:
         url_file_path = sys.argv[1]
         sites_url_list = load_urls4check(url_file_path)
-        for site_url in iter(sites_url_list):
+        for site_url in sites_url_list:
             if is_server_respond_with_200(site_url):
-                print('От {} получен HTTP статус с кодом 200'.format(site_url))
+                logging.info('От {} получен HTTP статус с кодом 200'.format(site_url))
                 expiration_date = get_domain_expiration_date(site_url)
                 if check_expiration_date(expiration_date):
-                    print('Домменное имя {}, проплачено минимум на 1 месяц'.format(site_url))
+                    logging.info('Домменное имя {}, проплачено минимум на 1 месяц'.format(site_url))
                 else:
-                    print('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
+                    logging.warning('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
     else:
         print('Укажите имя файла: $python check_sites_health.py <filename>')
