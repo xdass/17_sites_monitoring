@@ -42,12 +42,13 @@ if __name__ == '__main__':
         url_file_path = sys.argv[1]
         sites_url_list = load_urls4check(url_file_path)
         for site_url in sites_url_list:
+            respond_with_200 = is_server_respond_with_200(site_url)
             if is_server_respond_with_200(site_url):
                 logging.info('От {} получен HTTP статус с кодом 200'.format(site_url))
-                expiration_date = get_domain_expiration_date(site_url)
-                if check_expiration_date(expiration_date):
-                    logging.info('Домменное имя {}, проплачено минимум на 1 месяц'.format(site_url))
-                else:
-                    logging.warning('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
+            expiration_date = get_domain_expiration_date(site_url)
+            if check_expiration_date(expiration_date):
+                logging.info('Домменное имя {}, проплачено минимум на 1 месяц'.format(site_url))
+            else:
+                logging.warning('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
     else:
-        print('Укажите имя файла: $python check_sites_health.py <filename>')
+        logging.warning('Укажите имя файла: $python check_sites_health.py <filename>')
