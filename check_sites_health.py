@@ -35,20 +35,22 @@ def check_expiration_date(site_expiration_date):
     days_in_month = datetime.timedelta(days=30)
     return site_expiration_date - today > days_in_month
 
+def show_site_information(site_url):
+    try:
+        if is_server_respond_with_200(site_url):
+            print('От {} получен HTTP статус с кодом 200'.format(site_url))
+    except requests.ConnectionError as e:
+        logging.warning(e)
+    expiration_date = get_domain_expiration_date(site_url)
+    if not check_expiration_date(expiration_date):
+        print('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     if len(sys.argv) > 1:
         url_file_path = sys.argv[1]
         sites_url_list = load_urls4check(url_file_path)
-        for site_url in sites_url_list:
-            try:
-                if is_server_respond_with_200(site_url):
-                    print('От {} получен HTTP статус с кодом 200'.format(site_url))
-            except requests.ConnectionError as e:
-                logging.warning(e)
-            expiration_date = get_domain_expiration_date(site_url)
-            if not check_expiration_date(expiration_date):
-                print('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
+        for url in sites_url_list:
+            show_site_information(url)
     else:
         logging.warning('Укажите имя файла: $python check_sites_health.py <filename>')
