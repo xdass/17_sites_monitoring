@@ -18,8 +18,8 @@ def is_server_respond_with_200(url):
     try:
         response = requests.get(url)
         return bool(response.ok)
-    except requests.ConnectionError as err:
-        print(err.args[0])
+    except requests.ConnectionError as e:
+        raise requests.ConnectionError(e)
 
 
 def get_domain_expiration_date(url):
@@ -42,13 +42,13 @@ if __name__ == '__main__':
         url_file_path = sys.argv[1]
         sites_url_list = load_urls4check(url_file_path)
         for site_url in sites_url_list:
-            respond_with_200 = is_server_respond_with_200(site_url)
-            if is_server_respond_with_200(site_url):
-                logging.info('От {} получен HTTP статус с кодом 200'.format(site_url))
+            try:
+                if is_server_respond_with_200(site_url):
+                    print('От {} получен HTTP статус с кодом 200'.format(site_url))
+            except requests.ConnectionError as e:
+                logging.warning(e)
             expiration_date = get_domain_expiration_date(site_url)
-            if check_expiration_date(expiration_date):
-                logging.info('Домменное имя {}, проплачено минимум на 1 месяц'.format(site_url))
-            else:
-                logging.warning('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
+            if not check_expiration_date(expiration_date):
+                print('Срок регистрации {}, заканчивается меньше чем через месяц'.format(site_url))
     else:
         logging.warning('Укажите имя файла: $python check_sites_health.py <filename>')
